@@ -38,7 +38,7 @@ start_ueberzug() {
     mkfifo "$FIFO" || exit 1
     touch "$IMAGE" || exit 1
     ueberzug layer --parser simple --silent < "$FIFO" &
-    # prevent EOF
+    # https://github.com/seebye/ueberzug/issues/54#issuecomment-502869935
     exec 3>"$FIFO"
 }
 
@@ -71,7 +71,7 @@ while getopts "hs:b:f:t:" arg; do
 done
 shift $((OPTIND - 1))
 
-# Checkig if needed dependencies are installed
+# Check if dependencies are installed
 for dependency in ueberzug convert fzf fc-list; do
    if ! command -v "$dependency" > /dev/null 2>&1; then
        echo "error: Could not find '${dependency}', is it installed?" >&2
