@@ -1,243 +1,99 @@
 #!/bin/sh
-#
-# Siddharth Dushantha 2020
-#
-# Dependencies: sxiv, imagemagick, xdotool, fzf
+# Font preview with ueberzug and fzf
+# Dependencies: imagemagick, ueberzug, fzf, fontconfig
+# This is inspired by https://github.com/sdushantha/fontpreview
 
-VERSION=1.0.7
+# Checking for enviornment variables if available.
+# These are compatible with original fontpreview.
+SIZE=${FONTPREVIEW_SIZE:-1000x800}
+FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
+BG_COLOR=${FONTPREVIEW_BG_COLOR:-#ffffff}
+FG_COLOR=${FONTPREVIEW_FG_COLOR:-#000000}
+PREVIEW_TEXT=${FONTPREVIEW_PREVIEW_TEXT:-"ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\n\
+abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@$\%(){}[]"}
 
-# Default values
-SEARCH_PROMPT="❯ "
-SIZE=532x365
-POSITION="+0+0"
-FONT_SIZE=38
-BG_COLOR="#ffffff"
-FG_COLOR="#000000"
-PREVIEW_TEXT="ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@$\%(){}[]"
+# Ueberzug related variables
+FIFO="/tmp/fontpreview-ueberzug-fifo"
+IMAGE="/tmp/fontpreview-ueberzug-img.png"
+ID="fontpreview-ueberzug"
+WIDTH=$(tput cols)
+HEIGHT=$(tput lines)
 
-show_help() {
-printf "%s" "\
-usage: fontpreview [-h] [--size \"px\"] [--position \"+x+y\"] [--search-prompt SEARCH_PROMPT]
-                   [--font-size \"FONT_SIZE\"] [--bg-color \"BG_COLOR\"] [--fg-color \"FG_COLOR\"]
-                   [--preview-text \"PREVIEW_TEXT\"] [-i font.otf] [-o preview.png] [--version]
- 
-┌─┐┌─┐┌┐┌┌┬┐┌─┐┬─┐┌─┐┬  ┬┬┌─┐┬ ┬
-├┤ │ ││││ │ ├─┘├┬┘├┤ └┐┌┘│├┤ │││
-└  └─┘┘└┘ ┴ ┴  ┴└─└─┘ └┘ ┴└─┘└┴┘
-Very customizable and minimal font previewer written in bash
- 
-optional arguments:
-   -h, --help            show this help message and exit
-   -i, --input           filename of the input font (.otf, .ttf, .woff are supported)
-   -o, --output          filename of the output preview image (input.png if not set)
-   --size                size of the font preview window
-   --position            the position where the font preview window should be displayed
-   --search-prompt       input prompt of fuzzy searcher
-   --font-size           font size
-   --bg-color            background color of the font preview window
-   --fg-color            foreground color of the font preview window
-   --preview-text        preview text that should be displayed in the font preview window
-   --version             show the version of fontpreview you are using
-"
+usage() {
+    cat << EOF
+Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
+
+Font preview with ueberzug and fzf
+
+Options:
+   -h show this help message and exit
+   -s font size ($FONT_SIZE)
+   -b background color ($BG_COLOR)
+   -f foreground color ($FG_COLOR)
+   -t preview text
+EOF
 }
 
-pre_exit() {
-    # Get the proccess ID of this script and kill it.
-    # We are dumping the output of kill to /dev/null
-    # because if the user quits sxiv before they
-    # exit this script, an error will be shown
-    # from kill and we dont want that
-    kill -9 "$(cat "$PIDFILE" 2>/dev/null)" > /dev/null 2>&1
-
-    # Delete tempfiles, so we don't leave useless files behind.
-    rm -rf "$FONTPREVIEW_DIR"
+start_ueberzug() {
+    mkfifo "$FIFO" || exit 1
+    touch "$IMAGE" || exit 1
+    ueberzug layer --parser simple --silent < "$FIFO" &
+    # prevent EOF
+    exec 3>"$FIFO"
 }
 
-generate_preview(){
-    # Credits: https://bit.ly/2UvLVhM
-    convert -size $SIZE xc:"$BG_COLOR" \
-        -gravity center \
-        -pointsize $FONT_SIZE \
-        -font "$1" \
-        -fill "$FG_COLOR" \
-        -annotate +0+0 "$PREVIEW_TEXT" \
-        -flatten "$2"
+stop_ueberzug() {
+    exec 3>&-
+    rm "$FIFO" "$IMAGE" > /dev/null 2>&1
 }
 
-main(){
-    # Checkig if needed dependencies are installed
-    for dependency in xdotool sxiv convert fzf; do
-        if ! command -v "$dependency" > /dev/null 2>&1; then
-            echo "error: Could not find '${dependency}', is it installed?" >&2
-            exit 1
-        fi
-    done
-
-    # Checking for enviornment variables which the user might have set.
-    # This config file for fontpreview is pretty much the bashrc, zshrc, etc
-    # Majority of the variables in fontpreview can changed using the enviornment variables
-    # and this makes fontpreview very customizable
-    [ -n "$FONTPREVIEW_SEARCH_PROMPT" ] && SEARCH_PROMPT=$FONTPREVIEW_SEARCH_PROMPT
-    [ -n "$FONTPREVIEW_SIZE" ] && SIZE=$FONTPREVIEW_SIZE
-    [ -n "$FONTPREVIEW_POSITION" ] && POSITION=$FONTPREVIEW_POSITION
-    [ -n "$FONTPREVIEW_FONT_SIZE" ] && FONT_SIZE=$FONTPREVIEW_FONT_SIZE
-    [ -n "$FONTPREVIEW_BG_COLOR" ] && BG_COLOR=$FONTPREVIEW_BG_COLOR
-    [ -n "$FONTPREVIEW_FG_COLOR" ] && FG_COLOR=$FONTPREVIEW_FG_COLOR
-    [ -n "$FONTPREVIEW_PREVIEW_TEXT" ] && PREVIEW_TEXT=$FONTPREVIEW_PREVIEW_TEXT
-
-    # Save the window ID of the terminal window fontpreview is executed in.
-    # This is so that when we open up sxiv, we can change the focus back to
-    # the terminal window, so that the user can search for the fonts without
-    # having to manualy change the focus back to the terminal.
-    xdotool getactivewindow > "$TERMWIN_IDFILE"
-
-    # Flag to run some commands only once in the loop
-    FIRST_RUN=true
-
-    while true; do
-        # List out all the fonts which imagemagick is able to find, extract
-        # the font names and then pass them to fzf
-        font=$(convert -list font | awk -F: '/^[ ]*Font: /{print substr($NF,2)}' | fzf --prompt="$SEARCH_PROMPT")
-
-        # Exit if nothing is returned by fzf, which also means that the user
-        # has pressed [ESCAPE]
-        [ -z "$font" ] && return
-
-        generate_preview "$font" "$FONT_PREVIEW"
-
-        if [ "$FIRST_RUN" = true ]; then
-            FIRST_RUN=false
-
-            # Display the font preview using sxiv
-            #sxiv -g "$SIZE$POSITION" "$FONT_PREVIEW" -N "fontpreview" -b &
-            sxiv -N "fontpreview" -b -g "$SIZE$POSITION" "$FONT_PREVIEW" &
-
-            # Change focus from sxiv, back to the terminal window
-            # so that user can continue to search for fonts without
-            # having to manually change focus back to the terminal window
-            xdotool windowfocus "$(cat "$TERMWIN_IDFILE")"
-
-            # Save the process ID so that we can kill
-            # sxiv when the user exits the script
-            echo $! >"$PIDFILE"
-
-        # Check for crashes of sxiv
-        elif [ -f "$PIDFILE" ] ; then
-            if ! pgrep -F "$PIDFILE" >/dev/null 2>&1; then
-            echo "Restart sxiv - You maybe using a obsolete version. " >&2
-            # Display the font preview using sxiv
-            sxiv -g "$SIZE$POSITION" -N "fontpreview" -b "$FONT_PREVIEW" &
-
-            # Change focus from sxiv, back to the terminal window
-            # so that user can continue to search for fonts without
-            # having to manually change focus back to the terminal window
-            xdotool windowfocus "$(cat "$TERMWIN_IDFILE")"
-
-            # Save the process ID so that we can kill
-            # sxiv when the user exits the script
-            echo $! >"$PIDFILE"
-            fi
-
-        fi
-    done
+preview() {
+    # In fzf the cols and lines are those of the preview pane
+    [ -f "$1" ] || fontfile=$(fc-match -f "%{file}" "$1")
+    convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
+        -pointsize "$FONT_SIZE" -font "$fontfile" -gravity center \
+        -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
+    {   printf "action\tadd\tidentifier\t%s\t" "$ID"
+        printf "x\t%d\ty\t%d\tpath\t%s\t" 2 1 "$IMAGE"
+        printf "width\t%d\theight\t%d\n" "$WIDTH" "$HEIGHT"
+    } > "$FIFO" ||
+    printf "action\tremove\tidentifier\t%s\n" "$ID" > "$FIFO"
 }
 
-# Disable CTRL-Z because if we allowed this key press,
-# then the script would exit but, sxiv would still be
-# running
-trap "" TSTP
-
-trap pre_exit EXIT
-
-# Use mktemp to create a temporary directory that won't
-# collide with temporary files of other application.
-FONTPREVIEW_DIR="$(mktemp -d "${TMPDIR:-/tmp}/fontpreview_dir.XXXXXXXX")" || exit
-PIDFILE="$FONTPREVIEW_DIR/fontpreview.pid"
-touch "$PIDFILE" || exit
-FONT_PREVIEW="$FONTPREVIEW_DIR/fontpreview.png"
-touch "$FONT_PREVIEW" || exit
-TERMWIN_IDFILE="$FONTPREVIEW_DIR/fontpreview.termpid"
-touch "$TERMWIN_IDFILE" || exit
-
-font=$1
-
-
-# Parse the arguments
-options=$(getopt -o hi:o: --long position:,size:,version,search-prompt:,font-size:,bg-color:,fg-color:,preview-text:,input:,output:,help -- "$@")
-eval set -- "$options"
-
-while true; do
-    case "$1" in
-        --size)
-            shift
-            FONTPREVIEW_SIZE=$2
-            ;;
-        --position)
-            shift
-            FONTPREVIEW_POSITION=$2
-            ;;
-        -h|--help)
-            show_help
-            exit
-            ;;
-        --version)
-            echo $VERSION
-            exit
-            ;;
-        -i|--input)
-            input_file="$2"
-            ;;
-        -o|--output)
-            output_file="$2"
-            ;;
-        --search-prompt)
-            FONTPREVIEW_SEARCH_PROMPT=$2
-            ;;
-        --font-size)
-            FONTPREVIEW_FONT_SIZE=$2
-            ;;
-        --bg-color)
-            FONTPREVIEW_BG_COLOR=$2
-            ;;
-        --fg-color)
-            FONTPREVIEW_FG_COLOR=$2
-            ;;
-        --preview-text)
-            FONTPREVIEW_PREVIEW_TEXT=$2
-            ;;
-        --)
-            shift
-            break
-            ;;
+while getopts "hs:b:f:t:" arg; do
+    case "$arg" in
+        s) FONT_SIZE=$OPTARG;;
+        b) BG_COLOR=$OPTARG;;
+        f) FG_COLOR=$OPTARG;;
+        t) PREVIEW_TEXT=$OPTARG;;
+        *) usage; exit ;;
     esac
-    shift
+done
+shift $((OPTIND - 1))
+
+# Checkig if needed dependencies are installed
+for dependency in ueberzug convert fzf fc-list; do
+   if ! command -v "$dependency" > /dev/null 2>&1; then
+       echo "error: Could not find '${dependency}', is it installed?" >&2
+       exit 1
+   fi
 done
 
-
-# Point a font file to fontpreview and it will preview it.
-# Example:
-#   $ fontpreview /path/to/fontFile.ttf
-#
-# This is useful because people can preview fonts which they have not
-# installed onto their system. So if they want to preview a font file that
-# is in their Downloads directory, then they can easily preview it.
-if [ -f "$font" ]; then
-    generate_preview "$font" "$FONT_PREVIEW"
-
-    # Display the font preview using sxiv
-    sxiv -g "$SIZE$POSITION" -N "fontpreview" -b "$FONT_PREVIEW" &
-
-    # For some strange reason, sxiv just doesnt have time to read the file
-    sleep 0.1
-    exit
+if [ "$#" = 0 ]; then
+    start_ueberzug
+    # Export cli args as enviornment variables for preview command
+    export FONTPREVIEW_FONT_SIZE=$FONT_SIZE
+    export FONTPREVIEW_BG_COLOR=$BG_COLOR
+    export FONTPREVIEW_FG_COLOR=$FG_COLOR
+    export FONTPREVIEW_PREVIEW_TEXT=$PREVIEW_TEXT
+    # The preview command runs this script again with an argument
+    fc-list -f "%{family}:%{style}\n" |
+    while IFS=: read -r family style; do
+        echo "${family%,*}:style=${style%,*}"
+    done | sort | uniq |
+    fzf --layout=reverse --preview "sh $0 {}" \
+        --preview-window "left:$((WIDTH / 2)):noborder:wrap"
+    trap stop_ueberzug EXIT QUIT INT TERM
+elif [ "$#" = 1 ]; then
+    preview "$1"
 fi
-
-# Check if the user gave an input file if they did, then create a preview
-# and then save the preview to the current working directory
-if [ "$input_file" != "" ] ; then
-    [ -z "$output_file" ] && output_file="${input_file}.png"
-    generate_preview "$input_file" "$output_file"
-    exit
-fi
-
-main
