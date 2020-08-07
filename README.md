@@ -4,17 +4,15 @@
 
 ## Dependencies
 
-- `fzf`
+- [`fzf`](https://github.com/junegunn/fz://github.com/junegunn/fzf)
+- [`ueberzug`](https://github.com/seebye/ueberzug)
 - `imagemagick`
-- `ueberzug`
 - `fontconfig`
 
 ## Usage
 
 ```
 Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
-
-Font preview with ueberzug and fzf
 
 Options:
    -h show this help message and exit
@@ -26,7 +24,7 @@ Options:
 
 ## Configure
 
-This script makes use of some of the environment variables:
+This script makes use of some of the environment variables as follows, these are the same in [fontpreview](https://github.com/sdushantha/fontpreview) so you can use the same settings with `fontpreview-ueberzug`:
 
 - `FONTPREVIEW_FONT_SIZE`: Font size
 - `FONTPREVIEW_BG_COLOR`: Background color
