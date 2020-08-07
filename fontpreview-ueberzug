@@ -3,7 +3,7 @@
 # Dependencies: imagemagick, ueberzug, fzf, fontconfig
 # This is inspired by https://github.com/sdushantha/fontpreview
 
-# Checking for enviornment variables if available.
+# Checking for environment variables if available.
 # These are compatible with original fontpreview.
 SIZE=${FONTPREVIEW_SIZE:-800x800}
 FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
@@ -81,7 +81,7 @@ done
 
 if [ "$#" = 0 ]; then
     start_ueberzug
-    # Export cli args as enviornment variables for preview command
+    # Export cli args as environment variables for preview command
     export FONTPREVIEW_FONT_SIZE=$FONT_SIZE
     export FONTPREVIEW_BG_COLOR=$BG_COLOR
     export FONTPREVIEW_FG_COLOR=$FG_COLOR
