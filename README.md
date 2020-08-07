@@ -32,3 +32,8 @@ This script makes use of some of the environment variables:
 - `FONTPREVIEW_BG_COLOR`: Background color
 - `FONTPREVIEW_FG_COLOR`: Foreground color
 - `FONTPREVIEW_PREVIEW_TEXT`: Preview text to display
+
+## Difference from [fontpreview](https://github.com/sdushantha/fontpreview)
+
+- Does not need two windows (terminal and sxiv) to display. Use `ueberzug` instead.
+- Preview updates as you scroll without having to press enter also going back to the first font in list.
