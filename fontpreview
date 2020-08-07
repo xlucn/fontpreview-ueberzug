@@ -5,12 +5,12 @@
 
 # Checking for enviornment variables if available.
 # These are compatible with original fontpreview.
-SIZE=${FONTPREVIEW_SIZE:-1000x800}
+SIZE=${FONTPREVIEW_SIZE:-800x800}
 FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
 BG_COLOR=${FONTPREVIEW_BG_COLOR:-#ffffff}
 FG_COLOR=${FONTPREVIEW_FG_COLOR:-#000000}
 PREVIEW_TEXT=${FONTPREVIEW_PREVIEW_TEXT:-"ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\n\
-abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@$\%(){}[]"}
+abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
 
 # Ueberzug related variables
 FIFO="/tmp/fontpreview-ueberzug-fifo"
