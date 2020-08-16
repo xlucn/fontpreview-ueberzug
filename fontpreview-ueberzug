@@ -70,10 +70,10 @@ if [ "$#" = 0 ]; then
     # Prepare
     start_ueberzug
     # Export cli args as environment variables for preview command
-    export FONTPREVIEW_FONT_SIZE=$FONT_SIZE
-    export FONTPREVIEW_BG_COLOR=$BG_COLOR
-    export FONTPREVIEW_FG_COLOR=$FG_COLOR
-    export FONTPREVIEW_PREVIEW_TEXT=$PREVIEW_TEXT
+    export FONTPREVIEW_FONT_SIZE="$FONT_SIZE"
+    export FONTPREVIEW_BG_COLOR="$BG_COLOR"
+    export FONTPREVIEW_FG_COLOR="$FG_COLOR"
+    export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
     fc-list -f "%{family}:%{style}\n" |
     while IFS=: read -r family style; do
