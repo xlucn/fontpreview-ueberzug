@@ -15,10 +15,10 @@
 Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
 
 Options:
-   -h show this help message and exit
-   -s font size ($FONT_SIZE)
-   -b background color ($BG_COLOR)
-   -f foreground color ($FG_COLOR)
+   -h show help message
+   -s font size
+   -b background color
+   -f foreground color
    -t preview text
 ```
 
@@ -33,5 +33,5 @@ This script makes use of some of the environment variables as follows, these are
 
 ## Difference from [fontpreview](https://github.com/sdushantha/fontpreview)
 
-- Does not need two windows (terminal and sxiv) to display. Use `ueberzug` instead.
+- Does not need two windows (terminal and sxiv) to display. Use `ueberzug` to display the preview image in terminal instead.
 - Preview updates as you scroll without having to press enter also going back to the first font in list.
