@@ -82,5 +82,5 @@ if [ "$#" = 0 ]; then
         --preview-window "left:$((WIDTH / 2)):noborder:wrap"
     trap stop_ueberzug EXIT QUIT INT TERM
 elif [ "$#" = 1 ]; then
-    preview "$1"
+    [ -p "$FIFO" ] && preview "$1"
 fi
