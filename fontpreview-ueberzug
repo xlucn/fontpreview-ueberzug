@@ -61,6 +61,7 @@ done
 shift $((OPTIND - 1))
 
 if [ "$#" = 0 ]; then
+    trap stop_ueberzug EXIT QUIT INT TERM
     # Check if dependencies are installed
     for dependency in ueberzug convert fzf fc-list; do
        command -v "$dependency" > /dev/null 2>&1 ||
@@ -80,7 +81,6 @@ if [ "$#" = 0 ]; then
     done | sort | uniq |
     fzf --layout=reverse --preview "sh $0 {}" \
         --preview-window "left:$((WIDTH / 2)):noborder:wrap"
-    trap stop_ueberzug EXIT QUIT INT TERM
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"
 fi
