@@ -76,7 +76,7 @@ if [ "$#" = 0 ]; then
     # The preview command runs this script again with an argument
     fc-list -f "%{family}:%{style}\n" |
     while IFS=: read -r family style; do
-        echo "${family%,*}:style=${style%,*}"
+        echo "${family%,*}${style:+:${style%,*}}"
     done | sort | uniq |
     fzf --layout=reverse --preview "sh $0 {}" \
         --preview-window "left:$((WIDTH / 2)):noborder:wrap"
