@@ -20,18 +20,7 @@ WIDTH=$(tput cols)
 HEIGHT=$(tput lines)
 
 usage() {
-    cat << EOF
-Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
-
-Font preview with ueberzug and fzf
-
-Options:
-   -h show this help message and exit
-   -s font size ($FONT_SIZE)
-   -b background color ($BG_COLOR)
-   -f foreground color ($FG_COLOR)
-   -t preview text
-EOF
+    echo "Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
 }
 
 start_ueberzug() {
