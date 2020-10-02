@@ -3,12 +3,28 @@
 # Dependencies: imagemagick, ueberzug, fzf, fontconfig
 # This is inspired by https://github.com/sdushantha/fontpreview
 
+# This gets an xresources property of the current window
+get_window_property() {
+	echo "$(xprop -id $(xprop -root _NET_ACTIVE_WINDOW | cut -s -d' ' -f5) |
+	grep WM_CLASS |
+	grep -oP '(?<=").*?(?=")')\n*" |
+	grep -v ',' |
+	(while read line ; do
+		COLOR="$(xrdb -q | grep -F "$line.$1" | cut -f2)"
+		[ -z "$COLOR" ] || break;
+	done;
+	echo $COLOR;)
+}
+
 # Checking for environment variables if available.
 # These are compatible with original fontpreview.
 SIZE=${FONTPREVIEW_SIZE:-800x800}
 FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
-BG_COLOR=${FONTPREVIEW_BG_COLOR:-#ffffff}
-FG_COLOR=${FONTPREVIEW_FG_COLOR:-#000000}
+# Use environment variables if set else use xresources and then finally black/white
+BG_COLOR=${FONTPREVIEW_BG_COLOR:-$(get_window_property "background")}
+FG_COLOR=${FONTPREVIEW_FG_COLOR:-$(get_window_property "foreground")}
+BG_COLOR=${BG_COLOR:-#ffffff}
+FG_COLOR=${FG_COLOR:-#000000}
 PREVIEW_TEXT=${FONTPREVIEW_PREVIEW_TEXT:-"ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\n\
 abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
 
