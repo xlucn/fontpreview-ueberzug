@@ -12,7 +12,7 @@
 ## Usage
 
 ```
-Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
+Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
 
 Options:
    -h show help message
