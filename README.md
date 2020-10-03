@@ -4,7 +4,7 @@
 
 ## Dependencies
 
-- [`fzf`](https://github.com/junegunn/fz://github.com/junegunn/fzf)
+- [`fzf`](https://github.com/junegunn/fzf)
 - [`ueberzug`](https://github.com/seebye/ueberzug)
 - `imagemagick`
 - `fontconfig`
