@@ -9,6 +9,21 @@
 - `imagemagick`
 - `fontconfig`
 
+## Install
+
+### Manual
+
+Simply run the script, or put the script in your `$PATH`, or with makefile as follows:
+
+After cloning/downloading the repo, install with make (change the destination with `PREFIX`)
+```
+make install
+```
+
+### AUR
+
+For Arch based users, `fontpreview-ueberzug` is available [in AUR](https://aur.archlinux.org/packages/fontpreview-ueberzug-git), thanks to @pabloariasal!
+
 ## Usage
 
 ```
