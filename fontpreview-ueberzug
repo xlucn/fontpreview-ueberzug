@@ -80,7 +80,7 @@ if [ "$#" = 0 ]; then
         echo "${family%,*}${style:+:${style%,*}}"
     done | sort | uniq |
     fzf --layout=reverse --preview "sh $0 {}" \
-        --preview-window "left:$((WIDTH / 2)):noborder:wrap"
+        --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"
 fi
