@@ -1,6 +1,5 @@
 #!/bin/sh
 # Font preview with ueberzug and fzf
-# Dependencies: imagemagick, ueberzug, fzf, fontconfig
 # This is inspired by https://github.com/sdushantha/fontpreview
 
 # Checking for environment variables if available.
@@ -61,11 +60,6 @@ shift $((OPTIND - 1))
 
 if [ "$#" = 0 ]; then
     trap stop_ueberzug EXIT QUIT INT TERM
-    # Check if dependencies are installed
-    for dependency in ueberzug convert fzf; do
-       command -v "$dependency" > /dev/null 2>&1 ||
-       { echo "Please install ${dependency}." >&2; exit 1; }
-    done
     # Prepare
     start_ueberzug
     # Export cli args as environment variables for preview command
