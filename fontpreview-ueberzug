@@ -38,7 +38,8 @@ stop_ueberzug() {
 
 preview() {
     # In fzf the cols and lines are those of the preview pane
-    [ -f "$1" ] || fontfile=$(fc-match -f "%{file}" "$1")
+    fontfile="$(echo "$1" | awk -F"\t" '{print $2}')"
+    [ -f "$fontfile" ] || exit 1
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity center \
         -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
@@ -63,7 +64,7 @@ shift $((OPTIND - 1))
 if [ "$#" = 0 ]; then
     trap stop_ueberzug EXIT QUIT INT TERM
     # Check if dependencies are installed
-    for dependency in ueberzug convert fzf fc-list; do
+    for dependency in ueberzug convert fzf; do
        command -v "$dependency" > /dev/null 2>&1 ||
        { echo "Please install ${dependency}." >&2; exit 1; }
     done
@@ -75,11 +76,15 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
-    fc-list -f "%{family}:%{style}\n" |
-    while IFS=: read -r family style; do
-        echo "${family%,*}${style:+:${style%,*}}"
+    convert -list font |
+      awk '/Font:/ {$1=""; gsub(/ /, "", $0);printf $0":"; }
+          /family:/{$1=""; gsub(/ /, "", $0);printf $0":"}
+          /style:/ {$1=""; gsub(/ /, "", $0);printf $0":"}
+          /glyphs:/{$1=""; gsub(/ /, "", $0);print $0}' |
+    while IFS=: read -r font family style path; do
+        printf '%s\t%s\n' "${font}:${family%,*}${style:+:${style%,*}}" "${path}"
     done | sort | uniq |
-    fzf --layout=reverse --preview "sh $0 {}" \
+    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
         --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"
