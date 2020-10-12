@@ -22,7 +22,7 @@ make install
 
 ### AUR
 
-For Arch based users, `fontpreview-ueberzug` is available [in AUR](https://aur.archlinux.org/packages/fontpreview-ueberzug-git), thanks to @pabloariasal!
+For Arch based users, `fontpreview-ueberzug-git` is available [in AUR](https://aur.archlinux.org/packages/fontpreview-ueberzug-git), thanks to @pabloariasal!
 
 ## Usage
 
