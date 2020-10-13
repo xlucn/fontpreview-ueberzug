@@ -42,7 +42,7 @@ preview() {
         -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
     {   printf "action\tadd\tidentifier\t%s\t" "$ID"
         printf "x\t%d\ty\t%d\tpath\t%s\t" 2 1 "$IMAGE"
-        printf "width\t%d\theight\t%d\n" "$WIDTH" "$HEIGHT"
+        printf "width\t%d\theight\t%d\n" "$WIDTH" "$((HEIGHT - 2))"
     } > "$FIFO" ||
     printf "action\tremove\tidentifier\t%s\n" "$ID" > "$FIFO"
 }
