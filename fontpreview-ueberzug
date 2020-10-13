@@ -19,7 +19,7 @@ WIDTH=$(tput cols)
 HEIGHT=$(tput lines)
 
 usage() {
-    echo "Usage: fontpreview [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
+    echo "Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
 }
 
 start_ueberzug() {
