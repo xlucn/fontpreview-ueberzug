@@ -36,6 +36,15 @@ Options:
    -t preview text
 ```
 
+### Tips
+
+To merge the preview image into the terminal, set background color the same as that of the terminal emulator, this is not by default.
+
+To show ligatures, you can use the following or any other text which contains ligature combination:
+```
+FONTPREVIEW_PREVIEW_TEXT="ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n<!-- != == ->\n-| #[ |> <$> ~@" fontpreview-ueberzug
+```
+
 ## Configure
 
 This script makes use of some of the environment variables as follows, these are the same in [fontpreview](https://github.com/sdushantha/fontpreview) so you can use the same settings with `fontpreview-ueberzug`:
