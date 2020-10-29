@@ -19,7 +19,7 @@ WIDTH=$(tput cols)
 HEIGHT=$(tput lines)
 
 usage() {
-    echo "Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
+    echo "Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT] [-p WIDTHxHEIGHT]"
 }
 
 start_ueberzug() {
@@ -47,12 +47,13 @@ preview() {
     printf "action\tremove\tidentifier\t%s\n" "$ID" > "$FIFO"
 }
 
-while getopts "hs:b:f:t:" arg; do
+while getopts "hs:b:f:t:p:" arg; do
     case "$arg" in
         s) FONT_SIZE=$OPTARG;;
         b) BG_COLOR=$OPTARG;;
         f) FG_COLOR=$OPTARG;;
         t) PREVIEW_TEXT=$OPTARG;;
+        p) SIZE=$OPTARG;;
         *) usage; exit ;;
     esac
 done
@@ -67,6 +68,7 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_BG_COLOR="$BG_COLOR"
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
+    export FONTPREVIEW_SIZE="$SIZE"
     # The preview command runs this script again with an argument
     convert -list font | sed -n 's/ *Font: //p' | sort | uniq |
     fzf --layout=reverse --preview "sh $0 {}" \
