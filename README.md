@@ -26,7 +26,7 @@ For Arch based users, `fontpreview-ueberzug-git` is available [in AUR](https://a
 ## Usage
 
 ```
-Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
+Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT] [-p WIDTHxHEIGHT]
 
 Options:
    -h show help message
@@ -34,6 +34,7 @@ Options:
    -b background color
    -f foreground color
    -t preview text
+	 -p preview size (e. g. 640x480)
 ```
 
 ### Tips
@@ -53,6 +54,7 @@ This script makes use of some of the environment variables as follows, these are
 - `FONTPREVIEW_BG_COLOR`: Background color
 - `FONTPREVIEW_FG_COLOR`: Foreground color
 - `FONTPREVIEW_PREVIEW_TEXT`: Preview text to display
+- `FONTPREVIEW_SIZE`: Preview size
 
 ## Difference from [fontpreview](https://github.com/sdushantha/fontpreview)
 
