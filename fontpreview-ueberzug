@@ -36,9 +36,10 @@ stop_ueberzug() {
 }
 
 preview() {
+    fontfile=$(echo "$1" | cut -f2)
     # In fzf the cols and lines are those of the preview pane
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
-        -pointsize "$FONT_SIZE" -font "$1" -gravity center \
+        -pointsize "$FONT_SIZE" -font "$fontfile" -gravity center \
         -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
     {   printf "action\tadd\tidentifier\t%s\t" "$ID"
         printf "x\t%d\ty\t%d\tpath\t%s\t" 2 1 "$IMAGE"
@@ -68,8 +69,13 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
-    convert -list font | sed -n 's/ *Font: //p' | sort | uniq |
-    fzf --layout=reverse --preview "sh $0 {}" \
+    families=$(convert -list font | sed -n 's/ *family: //p' | sort | uniq)
+    fc-list -f "%{family}:%{style}:%{file}\n" | sort | uniq |
+    while IFS=: read -r family style file; do
+        [ "${families%${family%,*}*}" = "$families" ] && continue
+        printf "%s%s\t%s\n" "${family%,*}" "${style:+:style=${style%,*}}" "$file"
+    done |
+    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
         --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"
