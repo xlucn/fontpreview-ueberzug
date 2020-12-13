@@ -34,6 +34,7 @@ start_ueberzug() {
 stop_ueberzug() {
     exec 3>&-
     rm "$FIFO" "$IMAGE" > /dev/null 2>&1
+    pkill -P -9 $$ > /dev/null 2>&1
 }
 
 preview() {
