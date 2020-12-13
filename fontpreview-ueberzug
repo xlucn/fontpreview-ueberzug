@@ -15,8 +15,8 @@ abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
 FIFO="/tmp/fontpreview-ueberzug-fifo"
 IMAGE="/tmp/fontpreview-ueberzug-img.png"
 ID="fontpreview-ueberzug"
-WIDTH=$(tput cols)
-HEIGHT=$(tput lines)
+WIDTH=$FZF_PREVIEW_COLUMNS
+HEIGHT=$FZF_PREVIEW_LINES
 
 usage() {
     echo "Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
