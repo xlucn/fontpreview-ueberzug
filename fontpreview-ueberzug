@@ -41,8 +41,8 @@ preview() {
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity center \
         -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
-    {   printf '{ "action": "add", "identifier": "%s",' "$ID"
-        printf '"x": %d, "y": %d, "path": "%s",' 2 1 "$IMAGE"
+    {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
+        printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
         printf '"width": %d, "height": %d }\n' "$WIDTH" "$((HEIGHT - 2))"
     } > "$FIFO" ||
     printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
