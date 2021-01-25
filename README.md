@@ -12,12 +12,7 @@
 
 ### Manual
 
-Simply run the script, or put the script in your `$PATH`, or with makefile as follows:
-
-After cloning/downloading the repo, install with make (change the destination with `PREFIX`)
-```
-make install
-```
+Simply run the script, or put the script in your `$PATH`, or with provided makefile.
 
 ### AUR
 
@@ -27,20 +22,13 @@ For Arch based users, `fontpreview-ueberzug-git` is available [in AUR](https://a
 
 ```
 Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
-
-Options:
-   -h show help message
-   -s font size
-   -b background color
-   -f foreground color
-   -t preview text
 ```
 
 ### Tips
 
-To merge the preview image into the terminal, set background color the same as that of the terminal emulator, this is not by default.
+- To merge the preview image into the terminal, set background color the same as that of the terminal emulator, this is not by default.
 
-To show ligatures, you can use the following or any other text which contains ligature combination:
+- To show ligatures, you can use the following or any other text which contains ligature combination:
 ```
 FONTPREVIEW_PREVIEW_TEXT="ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n<!-- != == ->\n-| #[ |> <$> ~@" fontpreview-ueberzug
 ```
@@ -49,10 +37,10 @@ FONTPREVIEW_PREVIEW_TEXT="ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuv
 
 This script makes use of some of the environment variables as follows, these are the same in [fontpreview](https://github.com/sdushantha/fontpreview) so you can use the same settings with `fontpreview-ueberzug`:
 
-- `FONTPREVIEW_FONT_SIZE`: Font size
-- `FONTPREVIEW_BG_COLOR`: Background color
-- `FONTPREVIEW_FG_COLOR`: Foreground color
-- `FONTPREVIEW_PREVIEW_TEXT`: Preview text to display
+- `FONTPREVIEW_FONT_SIZE`
+- `FONTPREVIEW_BG_COLOR`
+- `FONTPREVIEW_FG_COLOR`
+- `FONTPREVIEW_PREVIEW_TEXT`
 
 ## Difference from [fontpreview](https://github.com/sdushantha/fontpreview)
 
