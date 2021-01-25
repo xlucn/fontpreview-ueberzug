@@ -25,7 +25,7 @@ usage() {
 start_ueberzug() {
     mkfifo "$FIFO" || exit 1
     touch "$IMAGE" || exit 1
-    ueberzug layer --parser simple --silent < "$FIFO" &
+    ueberzug layer --parser json --silent < "$FIFO" &
     # https://github.com/seebye/ueberzug/issues/54#issuecomment-502869935
     exec 3>"$FIFO"
 }
@@ -41,11 +41,11 @@ preview() {
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity center \
         -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
-    {   printf "action\tadd\tidentifier\t%s\t" "$ID"
-        printf "x\t%d\ty\t%d\tpath\t%s\t" 2 1 "$IMAGE"
-        printf "width\t%d\theight\t%d\n" "$WIDTH" "$((HEIGHT - 2))"
+    {   printf '{ "action": "add", "identifier": "%s",' "$ID"
+        printf '"x": %d, "y": %d, "path": "%s",' 2 1 "$IMAGE"
+        printf '"width": %d, "height": %d }\n' "$WIDTH" "$((HEIGHT - 2))"
     } > "$FIFO" ||
-    printf "action\tremove\tidentifier\t%s\n" "$ID" > "$FIFO"
+    printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
 }
 
 while getopts "hs:b:f:t:" arg; do
