@@ -8,6 +8,7 @@ SIZE=${FONTPREVIEW_SIZE:-800x800}
 FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
 BG_COLOR=${FONTPREVIEW_BG_COLOR:-#ffffff}
 FG_COLOR=${FONTPREVIEW_FG_COLOR:-#000000}
+TEXT_ALIGN=${FONTPREVIEW_TEXT_ALIGN:-center}
 PREVIEW_TEXT=${FONTPREVIEW_PREVIEW_TEXT:-"ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\n\
 abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
 
@@ -36,11 +37,12 @@ stop_ueberzug() {
 }
 
 preview() {
+    [ "$TEXT_ALIGN" = center ] || [ "$TEXT_ALIGN" = south ] || [ "$TEXT_ALIGN" = north ] || PADDING=50
     fontfile=$(echo "$1" | cut -f2)
     # In fzf the cols and lines are those of the preview pane
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
-        -pointsize "$FONT_SIZE" -font "$fontfile" -gravity center \
-        -annotate +0+0 "$PREVIEW_TEXT" "$IMAGE" &&
+        -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
+        -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" &&
     {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
         printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
         printf '"width": %d, "height": %d }\n' "$WIDTH" "$((HEIGHT - 2))"
@@ -48,8 +50,9 @@ preview() {
     printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
 }
 
-while getopts "hs:b:f:t:" arg; do
+while getopts "a:hs:b:f:t:" arg; do
     case "$arg" in
+        a) TEXT_ALIGN=$OPTARG;;
         s) FONT_SIZE=$OPTARG;;
         b) BG_COLOR=$OPTARG;;
         f) FG_COLOR=$OPTARG;;
@@ -64,6 +67,8 @@ if [ "$#" = 0 ]; then
     # Prepare
     start_ueberzug
     # Export cli args as environment variables for preview command
+    TEXT_ALIGN=$(echo "$TEXT_ALIGN" | sed 's/top/north/; s/bottom/south/; s/left/west/; s/right/east/')
+    export FONTPREVIEW_TEXT_ALIGN="$TEXT_ALIGN"
     export FONTPREVIEW_FONT_SIZE="$FONT_SIZE"
     export FONTPREVIEW_BG_COLOR="$BG_COLOR"
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"

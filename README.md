@@ -21,8 +21,17 @@ For Arch based users, `fontpreview-ueberzug-git` is available [in AUR](https://a
 ## Usage
 
 ```
-Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
+Usage: fontpreview-ueberzug [-h] [-a TEXT_ALIGN] [-s FONT_SIZE] [-b BG_COLOR] [-f FG_COLOR] [-t PREVIEW_TEXT]
+
+Options:
+    -a     alignment of preview text, you can use center, top/bottom/left/right or
+           north/south/west/east, or combinations like topleft, default is center
+    -s     preview font size, default is 72, note the actual size depends on the preview area
+    -b, -f background and foreground color, default is #ffffff and #000000
+    -t     preview text, you can add '\n' to split into lines
 ```
+
+The arguments are passed directly to 'convert' command, you can check the ImageMagick documentation to find acceptable formats for them.
 
 ### Tips
 
@@ -41,6 +50,7 @@ This script makes use of some of the environment variables as follows, these are
 - `FONTPREVIEW_BG_COLOR`
 - `FONTPREVIEW_FG_COLOR`
 - `FONTPREVIEW_PREVIEW_TEXT`
+- `FONTPREVIEW_TEXT_ALIGN`
 
 ## Difference from [fontpreview](https://github.com/sdushantha/fontpreview)
 
