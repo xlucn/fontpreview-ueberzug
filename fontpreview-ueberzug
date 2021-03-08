@@ -74,14 +74,7 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
-    families=$(convert -list font | sed -n 's/ *family: //p' | sort | uniq)
-    fc-list -f "%{family}:%{style}:%{file}\n" | sort | uniq |
-    while IFS=: read -r family style file; do
-        [ "${families%${family%,*}*}" = "$families" ] && continue
-        printf "%s%s\t%s\n" "${family%,*}" "${style:+:style=${style%,*}}" "$file"
-    done |
-    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
-        --preview-window "left:50%:noborder:wrap"
+    fc-list -f "%{family}:%{style}:%{file}\n" | sort | uniq | awk -F':' '{split ($1,a,",")} {print a[1]":style="$2 "\t" $3}' | fzf --with-nth 1 --delimiter "\t" --preview "sh $0 {2}" --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"
 fi
