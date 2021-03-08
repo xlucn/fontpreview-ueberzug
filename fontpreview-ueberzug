@@ -74,7 +74,7 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
-    fc-list -f "%{family}:%{style}:%{file}\n" | sort | uniq | awk -F':' '{split ($1,a,",")} {print a[1]":style="$2 "\t" $3}' | fzf --with-nth 1 --delimiter "\t" --preview "sh $0 {2}" --preview-window "left:50%:noborder:wrap"
+    fc-list -f "%{family}:%{style}:%{file}\n" | sort | uniq |awk -F':' '{split ($1,a,",")} {split ($2,b,",")} {print a[1]":style="b[1] "\t" $3}'| fzf --with-nth 1 --delimiter "\t" --preview "sh $0 {2}" --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"
 fi
