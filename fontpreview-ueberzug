@@ -2,6 +2,7 @@
 # Font preview with ueberzug and fzf
 # This is inspired by https://github.com/sdushantha/fontpreview
 
+# TODO: trap 'notify-send hello' WINCH
 # Checking for environment variables if available.
 # These are compatible with original fontpreview.
 SIZE=${FONTPREVIEW_SIZE:-800x800}
@@ -76,7 +77,8 @@ if [ "$#" = 0 ]; then
     # The preview command runs this script again with an argument
     fc-list -f "%{family}:%{style}:%{file}\n" |
     grep -i '\.\(ttc\|otf\|ttf\)$' | sort | uniq |
-    awk -F: '{split ($1,a,",")} {split ($2,b,",")} {print a[1]":style="b[1] "\t" $3}' |
+    awk -F: '{split($1,a,","); split($2,b,","); printf("%s",a[1]);
+        if(b[1] != "") printf(":style=%s",b[1]); printf("\t%s\n",$3)}' |
     fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
         --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
