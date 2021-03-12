@@ -75,7 +75,7 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
     fc-list -f "%{family}:%{style}:%{file}\n" |
-    grep -i "\(ttc\|otf\|ttf\)" | sort | uniq |
+    grep -i '\.\(ttc\|otf\|ttf\)$' | sort | uniq |
     awk -F: '{split ($1,a,",")} {split ($2,b,",")} {print a[1]":style="b[1] "\t" $3}' |
     fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
         --preview-window "left:50%:noborder:wrap"
