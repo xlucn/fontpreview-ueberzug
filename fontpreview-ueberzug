@@ -19,6 +19,11 @@ IMAGE="/tmp/fontpreview-ueberzug-img.png"
 ID="fontpreview-ueberzug"
 WIDTH=$FZF_PREVIEW_COLUMNS
 HEIGHT=$FZF_PREVIEW_LINES
+# fzf changes its preview paddings several times, its confusing
+VPAD=$(fzf --version | {
+    IFS='. ' read -r v1 v2 _
+    [ "$v1" = 0 ] && [ "$v2" -le 26 ] && echo 0 || echo 4
+})
 
 usage() {
     echo "Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
@@ -46,7 +51,7 @@ preview() {
         -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" &&
     {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
         printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
-        printf '"width": %d, "height": %d }\n' "$WIDTH" "$((HEIGHT - 2))"
+        printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
     } > "$FIFO" ||
     printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
 }
