@@ -26,7 +26,7 @@ VPAD=$(fzf --version | {
 })
 
 usage() {
-    echo "Usage: fontpreview-ueberzug [-h] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
+    echo "Usage: fontpreview-ueberzug [-h] [-a ALIGNMENT] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
 }
 
 start_ueberzug() {
