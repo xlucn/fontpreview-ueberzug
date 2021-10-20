@@ -116,8 +116,7 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
-    fc-list -f "%{family[0]}%{:style[0]=}\t%{file}\n" |
-    grep -i '\.\(ttc\|otf\|ttf\)$' | sort | uniq |
+    fc-list -f "%{family[0]}%{:style[0]=}\t%{file}\n" | sort -u |
     fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "bash $0 {}" \
         --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
