@@ -1,0 +1,111 @@
+#!/bin/sh
+# Font preview with w3m and fzf (works in tty)
+# Dependencies: imagemagick, w3m, fzf, fontconfig
+# This is a twin script of https://github.com/OliverLew/fontpreview-ueberzug
+
+# Checking for environment variables if available.
+# These are compatible with original fontpreview.
+SIZE=${FONTPREVIEW_SIZE:-800x800}
+FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
+BG_COLOR=${FONTPREVIEW_BG_COLOR:-#ffffff}
+FG_COLOR=${FONTPREVIEW_FG_COLOR:-#000000}
+TEXT_ALIGN=${FONTPREVIEW_TEXT_ALIGN:-center}
+PREVIEW_TEXT=${FONTPREVIEW_PREVIEW_TEXT:-"ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\n\
+abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
+
+# w3m related variables
+FB=${FB:-fb0} # The framebuffer device name under /dev/
+# Paths for w3mimgdisplay (from ranger)
+W3MIMGDISPLAY=$(which w3mimgdisplay 2> /dev/null)
+if [ -z "$W3MIMGDISPLAY" ] ; then
+    for libdir in lib libexec lib64 libexec64 local/libexec; do
+        W3MIMGDISPLAY="/usr/$libdir/w3m/w3mimgdisplay"
+        [ -f "$W3MIMGDISPLAY" ] && break
+    done
+fi
+FIFO="/tmp/fontpreview-w3m-fifo"
+IMAGE="/tmp/fontpreview-w3m.png"
+WIDTH=$FZF_PREVIEW_COLUMNS
+HEIGHT=$FZF_PREVIEW_LINES
+# fzf changes its preview paddings several times, its confusing
+VPAD=$(fzf --version | {
+    IFS='. ' read -r v1 v2 _
+    [ "$v1" = 0 ] && [ "$v2" -le 26 ] && echo 0 || echo 4
+})
+
+usage() {
+    echo "Usage: fontpreview-w3m [-h] [-a ALIGNMENT] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
+}
+
+preview() {
+    [ "$TEXT_ALIGN" = center ] || [ "$TEXT_ALIGN" = south ] || [ "$TEXT_ALIGN" = north ] || PADDING=50
+    fontfile=$(echo "$1" | cut -f2)
+    # The following command get the pane's location and size (in unit of characters)
+    # The format of #{window_visible_layout} is loosely summarised recursively as:
+    #   <format> = <width>x<height>,<x>,<y>(,<id>|{<format>}|[<format>])
+    # We only need the ones with ids, which means they don't have child structures.
+    [ -n "$TMUX_PANE" ] && IFS=x, read -r _ _ pane_x pane_y _ << EOF
+    $(tmux display -p -F "#{window_visible_layout}" \
+    | grep -o "\([0-9]*\)x\([0-9]*\),\([0-9]*\),\([0-9]*\),${TMUX_PANE#%}")
+EOF
+    X=$((2 + pane_x))
+    Y=$((1 + pane_y))
+    $W3MIMGDISPLAY < "$FIFO" &
+    # In fzf the cols and lines are those of the preview pane
+    convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
+        -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
+        -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" &&
+    > "$FIFO" printf "0;1;%d;%d;%d;%d;;;;;%s\n4;\n3;\n" \
+    $((X * CHARW)) $((Y * CHARH)) $((WIDTH * CHARW)) $((HEIGHT * CHARH)) "$IMAGE" ||
+    > "$FIFO" printf "6;%d;%d;%d;%d\n4;\n3;\n" \
+    $((X * CHARW)) $((Y * CHARH)) $((WIDTH * CHARW)) $((HEIGHT * CHARH))
+}
+
+while getopts "a:hs:b:f:t:" arg; do
+    case "$arg" in
+        a) TEXT_ALIGN=$OPTARG;;
+        s) FONT_SIZE=$OPTARG;;
+        b) BG_COLOR=$OPTARG;;
+        f) FG_COLOR=$OPTARG;;
+        t) PREVIEW_TEXT=$OPTARG;;
+        *) usage; exit ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if [ "$#" = 0 ]; then
+    trap 'rm $FIFO $IMAGE > /dev/null 2>&1' EXIT QUIT INT TERM
+    # Prepare
+    mkfifo "$FIFO" && touch "$IMAGE" || exit 1
+
+    # Get screen resolution of the framebuffer
+    IFS=, read -r screen_width screen_height < "/sys/class/graphics/$FB/virtual_size"
+    # If in tmux, get the rows and cols of the whole tmux client
+    if [ -n "$TMUX_PANE" ]; then
+        cols=$(tmux display -p "#{client_width}")
+        rows=$(tmux display -p "#{client_height}")
+    else
+        cols=${WIDTH:-$(tput cols)}
+        rows=${HEIGHT:-$(tput lines)}
+    fi
+    # Character width and height in pixels
+    export CHARW=${CHARW:-$((screen_width / cols))}
+    export CHARH=${CHARH:-$((screen_height / rows))}
+
+    # Export cli args as environment variables for preview command
+    TEXT_ALIGN=$(echo "$TEXT_ALIGN" | sed 's/top/north/; s/bottom/south/; s/left/west/; s/right/east/')
+    export FONTPREVIEW_TEXT_ALIGN="$TEXT_ALIGN"
+    export FONTPREVIEW_FONT_SIZE="$FONT_SIZE"
+    export FONTPREVIEW_BG_COLOR="$BG_COLOR"
+    export FONTPREVIEW_FG_COLOR="$FG_COLOR"
+    export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
+    # The preview command runs this script again with an argument
+    fc-list -f "%{family}:%{style}:%{file}\n" |
+    grep -i '\.\(ttc\|otf\|ttf\)$' | sort | uniq |
+    awk -F: '{split($1,a,","); split($2,b,","); printf("%s",a[1]);
+        if(b[1] != "") printf(":style=%s",b[1]); printf("\t%s\n",$3)}' |
+    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
+        --preview-window "left:50%:noborder:wrap"
+elif [ "$#" = 1 ]; then
+    [ -p "$FIFO" ] && preview "$1"
+fi
