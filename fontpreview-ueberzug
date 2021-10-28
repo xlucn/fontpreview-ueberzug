@@ -75,21 +75,22 @@ preview() {
     has_ascii "$fontfile" || PREVIEW_TEXT=$(list_chars "$fontfile")
 
     # Note: In fzf the cols and lines are those of the preview pane
-    convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
+    if { convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
         -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" > /dev/null 2>&1 ||
     # Normal method failed, try pango. Usually happens for color emoji, etc.
     convert -size "$SIZE" -background "$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontname" -gravity "$TEXT_ALIGN" \
-        "pango:$PREVIEW_TEXT" "$IMAGE" > /dev/null 2>&1 &&
-    {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
-        printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
-        printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
-    } > "$FIFO" ||
-    { # Image not generated, clear current one.
+        "pango:$PREVIEW_TEXT" "$IMAGE" > /dev/null 2>&1; }; then
+        {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
+            printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
+            printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
+        } > "$FIFO"
+    else
+        # Image not generated, clear current one.
         printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
-        printf "Having trouble showing this font:\n$1"
-    }
+        printf "Having trouble showing this font:\n%s" "$1"
+    fi
 }
 
 while getopts "a:hs:b:f:t:" arg; do
