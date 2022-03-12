@@ -51,6 +51,8 @@ EOF
     X=$((2 + pane_x))
     Y=$((1 + pane_y))
     $W3MIMGDISPLAY < "$FIFO" &
+    exec 3> "$FIFO"
+
     # In fzf the cols and lines are those of the preview pane
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
@@ -73,8 +75,13 @@ while getopts "a:hs:b:f:t:" arg; do
 done
 shift $((OPTIND - 1))
 
+stop_w3m() {
+    exec 3>&-
+    rm $FIFO $IMAGE > /dev/null 2>&1
+}
+
 if [ "$#" = 0 ]; then
-    trap 'rm $FIFO $IMAGE > /dev/null 2>&1' EXIT QUIT INT TERM
+    trap 'stop_w3m' EXIT QUIT INT TERM
     # Prepare
     mkfifo "$FIFO" && touch "$IMAGE" || exit 1
 
