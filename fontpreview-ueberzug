@@ -30,6 +30,7 @@ usage() {
 }
 
 start_ueberzug() {
+    [ -p "$FIFO" ] && rm -f "$FIFO"
     mkfifo "$FIFO" || exit 1
     touch "$IMAGE" || exit 1
     ueberzug layer --parser json --silent < "$FIFO" &
