@@ -1,8 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 # Font preview with ueberzug and fzf
 # This is inspired by https://github.com/sdushantha/fontpreview
 
-# TODO: trap 'notify-send hello' WINCH
 # Checking for environment variables if available.
 # These are compatible with original fontpreview.
 SIZE=${FONTPREVIEW_SIZE:-800x800}
@@ -43,18 +42,56 @@ stop_ueberzug() {
     rm "$FIFO" "$IMAGE" > /dev/null 2>&1
 }
 
+has_ascii() {
+    # Test if any code point span contains printable ascii
+    for range in $(fc-query --format='%{charset}' "$1"); do
+        [ $((0x${range%-*})) -le 32 ] && [ $((0x${range#*-})) -ge 126 ] && return 0
+        [ $((0x${range%-*})) -ge 128 ] && return 1
+    done
+    return 1
+}
+
+list_chars() {
+    # List non-ascii characters. Modified from my ls-chars script:
+    # https://github.com/OliverLew/dotfiles/blob/master/scripts/.local/bin/ls-chars
+    for range in $(fc-query --format='%{charset}' "$1"); do
+        for n in $(seq "0x${range%-*}" "0x${range#*-}"); do
+            [ "$n" -ge 128 ] && printf "%x\n" "$n"
+        done
+    done | while read -r n_hex; do
+        printf "%b" "\U$n_hex"
+        count=$((count + 1))
+        [ $((count % 10)) = 0 ] && lines=$((lines + 1)) && printf "\n"
+        [ "${lines:-0}" -ge 10 ] && return
+    done
+}
+
 preview() {
     [ "$TEXT_ALIGN" = center ] || [ "$TEXT_ALIGN" = south ] || [ "$TEXT_ALIGN" = north ] || PADDING=50
+    fontname=$(echo "$1" | cut -f1)
+    fontname=${fontname%%:*}
     fontfile=$(echo "$1" | cut -f2)
-    # In fzf the cols and lines are those of the preview pane
-    convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
+
+    # Font does not have all printable ascii, print whatever it has
+    has_ascii "$fontfile" || PREVIEW_TEXT=$(list_chars "$fontfile")
+
+    # Note: In fzf the cols and lines are those of the preview pane
+    if { convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
-        -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" &&
-    {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
-        printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
-        printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
-    } > "$FIFO" ||
-    printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
+        -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" > /dev/null 2>&1 ||
+    # Normal method failed, try pango. Usually happens for color emoji, etc.
+    convert -size "$SIZE" -background "$BG_COLOR" -fill "$FG_COLOR" \
+        -pointsize "$FONT_SIZE" -font "$fontname" -gravity "$TEXT_ALIGN" \
+        "pango:$PREVIEW_TEXT" "$IMAGE" > /dev/null 2>&1; }; then
+        {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
+            printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
+            printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
+        } > "$FIFO"
+    else
+        # Image not generated, clear current one.
+        printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" > "$FIFO"
+        printf "Having trouble showing this font:\n%s" "$1"
+    fi
 }
 
 while getopts "a:hs:b:f:t:" arg; do
@@ -81,9 +118,8 @@ if [ "$#" = 0 ]; then
     export FONTPREVIEW_FG_COLOR="$FG_COLOR"
     export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
     # The preview command runs this script again with an argument
-    fc-list -f "%{family[0]}%{:style[0]=}\t%{file}\n" |
-    grep -i '\.\(ttc\|otf\|ttf\)$' | sort | uniq |
-    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
+    fc-list -f "%{family[0]}%{:style[0]=}\t%{file}\n" | sort -u |
+    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "bash $0 {}" \
         --preview-window "left:50%:noborder:wrap"
 elif [ "$#" = 1 ]; then
     [ -p "$FIFO" ] && preview "$1"

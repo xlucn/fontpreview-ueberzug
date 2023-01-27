@@ -1,4 +1,6 @@
-`fontpreview-ueberzug` is a POSIX shell script to preview all fonts installed on system in `fzf` with `ueberzug`. It is inspired by [fontpreview](https://github.com/sdushantha/fontpreview) project while most of the code are completely rewritten here.
+`fontpreview-ueberzug` is a bash(1) script to preview all fonts installed on system in `fzf` with `ueberzug`. It is inspired by [fontpreview](https://github.com/sdushantha/fontpreview) project while most of the code are completely rewritten here.
+
+(1): It has only a minimal dependency on non-POSIX feature of `printf` command, which is printing Unicode characters with more than 16-bit code point. Most of the script is still POSIX-complaint. (If anyone knows how to do that within POSIX, don't hesitate to tell)
 
 ![](./demo.gif)
 
