@@ -33,7 +33,12 @@ start_ueberzug() {
     [ -p "$FIFO" ] && rm -f "$FIFO"
     mkfifo "$FIFO" || exit 1
     touch "$IMAGE" || exit 1
-    ueberzug layer --parser json --silent < "$FIFO" &
+    # use ueberzugpp if available
+    if command -v ueberzugpp > /dev/null; then
+        ueberzugpp layer --no-cache --silent < "$FIFO" &
+    else
+        ueberzug layer --parser json --silent < "$FIFO" &
+    fi
     # https://github.com/seebye/ueberzug/issues/54#issuecomment-502869935
     exec 3>"$FIFO"
 }
