@@ -54,7 +54,7 @@ preview() {
     # In fzf the cols and lines are those of the preview pane
     convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
         -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
-        -annotate +${PADDING:-0}+0 "$PREVIEW_TEXT" "$IMAGE" &&
+        -annotate +"${PADDING:-0}+0" "$PREVIEW_TEXT" "$IMAGE" &&
     {   printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
         printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
         printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
