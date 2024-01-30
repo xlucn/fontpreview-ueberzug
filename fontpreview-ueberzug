@@ -15,7 +15,7 @@ abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
 
 # Ueberzug related variables
 FIFO="/tmp/fontpreview-ueberzug-fifo"
-IMAGE="/tmp/fontpreview-ueberzug-img.png"
+IMAGE="/tmp/fontpreview-ueberzug-img.jpeg"
 ID="fontpreview-ueberzug"
 WIDTH=$FZF_PREVIEW_COLUMNS
 HEIGHT=$FZF_PREVIEW_LINES
